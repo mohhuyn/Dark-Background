@@ -1,0 +1,102 @@
+import cv2
+import numpy 
+width=400
+height=300
+#Qc=0
+#Qs=0
+def Func1(Val):
+    global HueLow
+    HueLow=Val
+    print('Hue low: ',HueLow)
+def Func2(Val):
+    global HueHigh
+    HueHigh=Val
+    print('Hue High: ',HueHigh)
+def Func7(Val):
+    global HueLowh
+    HueLowh=Val
+    print('Hue low: ',HueLowh)
+def Func8(Val):
+    global HueHighh
+    HueHighh=Val
+    print('Hue High: ',HueHighh)
+def Func3(Val):
+    global ValueLow
+    ValueLow=Val
+    print('Value low: ',ValueLow)
+def Func4(Val):
+    global ValueHigh
+    ValueHigh= Val
+    print('Value High : ',ValueHigh)
+def Func5(Val):
+    global SatLow
+    SatLow =Val
+    print('Sat low: ',SatLow)
+def Func6(Val):
+    global SatHigh
+    SatHigh=Val
+    print('Sat high: ',SatHigh)
+HueHighh=20
+HueLowh=10
+HueLow=10
+HueHigh=20
+SatLow=10
+SatHigh=250
+ValueLow=10
+ValueHigh=250
+cam=cv2.VideoCapture(0,cv2.CAP_DSHOW)
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT,height)
+cam.set(cv2.CAP_PROP_FPS, 30)
+cam.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc(*'MJPG'))
+cv2.namedWindow('My window')
+cv2.moveWindow('My window',640,0)
+cv2.resizeWindow('My window',300,400)
+cv2.createTrackbar('Hue Low','My window',10,150,Func1)
+cv2.createTrackbar('Hue HIGH','My window',20,179,Func2)
+cv2.createTrackbar('Value Low','My window',10,250,Func3)
+cv2.createTrackbar('Value High','My window',250,255,Func4)
+cv2.createTrackbar('Sauturation Low','My window',10,250,Func5)
+cv2.createTrackbar('Saturation High','My window',250,255,Func6)
+cv2.createTrackbar('Hue Low2','My window',10,150,Func7)
+cv2.createTrackbar('Hue HIGH2','My window',20,179,Func8)
+
+
+while True:
+    ignore,  frame = cam.read()
+    framHSV=cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+    lowerBon=numpy.array([HueLow,SatLow,ValueLow])
+    UpperBon=numpy.array([HueHigh,SatHigh,ValueHigh])
+    lowerBon1=numpy.array([HueLowh,SatLow,ValueLow])
+    UpperBon1=numpy.array([HueHighh,SatHigh,ValueHigh])
+    Mi=cv2.inRange(framHSV,lowerBon,UpperBon)
+    #Mi=cv2.bitwise_not(Mi)
+    Mo=cv2.inRange(framHSV,lowerBon1,UpperBon1)
+    #Mo=cv2.bitwise_not(Mi)
+    Minr= Mi | Mo
+    contours,junk=cv2.findContours(Minr,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    #cv2.drawContours(frame,contours,-1,(0,255,0),3)
+    for contour in contours:
+       
+        muv=[contour]
+        are=cv2.contourArea(contour)
+        if are>=300:
+            global Qs
+            global Qc
+            #cv2.drawContours(frame,muv,0,(0,255,0),3)
+            x,y,z,k=cv2.boundingRect(contour)
+            cv2.rectangle(frame,(x,y),(x+z,y+k),(0,255,0))
+            Qs=x
+            Qc=y
+
+    Mun=cv2.bitwise_and(frame,frame,mask=Minr)
+   
+    cv2.imshow('my WEBca', Mun)
+    cv2.moveWindow('my WEBca',0,330)
+    
+ 
+    cv2.imshow('my WEBcam', frame)
+    cv2.moveWindow('my WEBcam',Qs,Qc)
+    if cv2.waitKey(1) & 0xff ==ord('q'):
+        break
+cam.release()
